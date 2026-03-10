@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth status)",
+      "Bash(git config user.name \"dineshleaf\")",
+      "Bash(git config user.email \"dineshleaf@users.noreply.github.com\")",
+      "Bash(git add -A)",
+      "Bash(git commit -m \"Initial commit: EP360 Planner app\")"
+    ]
+  }
+}
