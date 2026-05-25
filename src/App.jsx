@@ -15,13 +15,16 @@ const GOLD = "#FFD700"; const DARK = "#0f0f17"; const CARD = "#1a1a2e"; const CA
 const GREEN = "#10b981"; const RED = "#ef4444"; const BLUE = "#3b82f6"; const MUTED = "#94a3b8";
 const BORDER = "#2d2d44"; const PURPLE = "#8b5cf6"; const ORANGE = "#f59e0b";
 
+const PLAN_HORIZONS = {
+  dec26: { label: "Jun – Dec 2026", short: "7 months", months: ["Jun'26", "Jul'26", "Aug'26", "Sep'26", "Oct'26", "Nov'26", "Dec'26"] },
+  mar27: { label: "Jun 2026 – Mar 2027", short: "10 months", months: ["Jun'26", "Jul'26", "Aug'26", "Sep'26", "Oct'26", "Nov'26", "Dec'26", "Jan'27", "Feb'27", "Mar'27"] },
+};
+
 const INITIAL_TEAM = [
   { id:"dinesh", name:"Dinesh", role:"Founder — SEO, Web, Paid, Sales, AM", monthly:150000, active:true, rating:"Founder", color:GOLD,
     clients:{ERPROOTS:0.20, Yogikuti:0.10}, seoRevenue:{Yogikuti:123000, ERPROOTS:200000}, note:"Delivers 62% of YK revenue (SEO). Also ERPR SEO." },
   { id:"thangavel", name:"Thangavel", role:"Web Developer", monthly:43083, active:true, rating:"Good", color:GREEN,
     clients:{ERPROOTS:0.16, Yogikuti:0.40, OPTC:0.04, "Ashoka College":0.01}, note:"Website dev & maintenance across clients" },
-  { id:"chandramohan", name:"Chandramohan", role:"Video Creator", monthly:89583, active:true, rating:"Bad", color:RED,
-    clients:{ERPROOTS:0.70, Yogikuti:0.07, iLink:0.01}, note:"Video content primarily for ERPR (70% time). Rated Bad." },
   { id:"selva", name:"Selva", role:"Graphics Designer", monthly:37917, active:true, rating:"Hold", color:ORANGE,
     clients:{ERPROOTS:0.54, Yogikuti:0.16, OPTC:0.01, "Ashoka College":0.01, "EQ FinFit":0.03, iLink:0.01}, note:"Design across all clients" },
   { id:"jovita", name:"Jovita", role:"Accounts Manager + Outreach", monthly:23800, active:true, rating:"Good", color:GREEN,
@@ -40,8 +43,8 @@ const INITIAL_TEAM = [
 
 const INITIAL_CLIENTS = [
   { id:"ERPROOTS", name:"ERPROOTS", active:true, mrr:550000, h1:2693387, h2:2482843, color:"#6366f1",
-    services:[{name:"SEO",amount:200000,by:"Dinesh"},{name:"Video",amount:100000,by:"Chandramohan"},{name:"Design",amount:50000,by:"Selva"},{name:"Web",amount:50000,by:"Thangavel"},{name:"Other",amount:150000,by:"Team"}],
-    note:"Parent company. 18X ROAS. March: ₹5.5L" },
+    services:[{name:"SEO",amount:200000,by:"Dinesh"},{name:"Video",amount:100000,by:"Team"},{name:"Design",amount:50000,by:"Selva"},{name:"Web",amount:50000,by:"Thangavel"},{name:"Other",amount:150000,by:"Team"}],
+    note:"Parent company. 18X ROAS. Video creator exited May 2026 — ₹1L/mo line to outsource or cut." },
   { id:"Yogikuti", name:"Yogikuti", active:true, mrr:199420, h1:1110380, h2:931020, color:"#8b5cf6",
     services:[{name:"SEO",amount:123000,by:"Dinesh"},{name:"Paid Ads",amount:38000,by:"Sumit"},{name:"Website",amount:8000,by:"Thangavel"},{name:"Other",amount:30420,by:"Team"}],
     note:"Long-standing relationship since 2020. SEO = 62% of billing." },
@@ -64,7 +67,7 @@ const INITIAL_CLIENTS = [
 ];
 
 const PRESETS = [
-  { label:"Current State", desc:"Everyone active, all costs", icon:"📊" },
+  { label:"Current State", desc:"Post-exit team, Mar MRR baseline", icon:"📊" },
   { label:"Drop Sumit + Preyash", desc:"Instant ₹35.7L/yr saved", icon:"✂️" },
   { label:"YK Only", desc:"Yogikuti as sole customer", icon:"🎯" },
   { label:"ERPR + YK Lean", desc:"Core trio + Dinesh 60%", icon:"💎" },
@@ -98,8 +101,10 @@ export default function EP360() {
   const [hireJrPPC, setHireJrPPC] = useState(false);
   const [hireSEO, setHireSEO] = useState(false);
   const [hireAM, setHireAM] = useState(false);
+  const [planHorizon, setPlanHorizon] = useState("dec26");
 
   const FIXED = inclFixed ? 322000 : 0; // ops 210K + tools 66K + ads 46K
+  const plan = PLAN_HORIZONS[planHorizon];
 
   const toggleTeam = useCallback((id) => { if(id==="dinesh") return; setTeam(t=>t.map(m=>m.id===id?{...m,active:!m.active}:m)); },[]);
   const toggleClient = useCallback((id) => { setClients(c=>c.map(cl=>cl.id===id?{...cl,active:!cl.active}:cl)); },[]);
@@ -150,17 +155,18 @@ export default function EP360() {
     const savings = (curCost - cost)*12;
 
     const months = [];
-    for(let i=1;i<=12;i++){
+    for(let i=0;i<plan.months.length;i++){
       let mS = totalSal, mR = adjMRR;
-      if(dineshMode==="zero3mo"){ if(i<=3) mS=tSal+hires; else mS=tSal+150000+hires; }
-      if(newClients>0){ if(i===1) mR=adjMRR-nRev*0.5; else if(i===2) mR=adjMRR-nRev*0.25; }
+      if(dineshMode==="zero3mo"){ if(i<3) mS=tSal+hires; else mS=tSal+150000+hires; }
+      if(newClients>0){ if(i===0) mR=adjMRR-nRev*0.5; else if(i===1) mR=adjMRR-nRev*0.25; }
       const mC=mS+FIXED;
-      months.push({month:`M${i}`,revenue:mR,cost:mC,profit:mR-mC});
+      months.push({month:plan.months[i],revenue:mR,cost:mC,profit:mR-mC});
     }
-    return {adjMRR,totalSal,cost,profit,margin,hc,months,seoRisk,dSal,tSal,hires,savings,nRev,aC,aT,totalMRR,curMRR,curCost};
-  },[team,clients,dineshMode,newClients,newClientMRR,inclFixed,hireJrPPC,hireSEO,hireAM,FIXED]);
+    const periodProfit = months.reduce((s,m)=>s+m.profit,0);
+    return {adjMRR,totalSal,cost,profit,margin,hc,months,seoRisk,dSal,tSal,hires,savings,nRev,aC,aT,totalMRR,curMRR,curCost,periodProfit,planLabel:plan.label,planShort:plan.short,planMonthCount:plan.months.length};
+  },[team,clients,dineshMode,newClients,newClientMRR,inclFixed,hireJrPPC,hireSEO,hireAM,FIXED,plan]);
 
-  const tabs = [{id:"dashboard",label:"Dashboard",icon:"📊"},{id:"team",label:"Team",icon:"👥"},{id:"clients",label:"Clients",icon:"🏢"},{id:"projection",label:"12-Month",icon:"📈"},{id:"audit",label:"Data Audit",icon:"🔍"}];
+  const tabs = [{id:"dashboard",label:"Dashboard",icon:"📊"},{id:"team",label:"Team",icon:"👥"},{id:"clients",label:"Clients",icon:"🏢"},{id:"projection",label:"Forward Plan",icon:"📈"},{id:"audit",label:"Data Audit",icon:"🔍"}];
 
   return <div style={{background:DARK,color:"#fff",minHeight:"100vh",fontFamily:"'DM Sans','Helvetica Neue',sans-serif"}}>
     {/* Header */}
@@ -169,12 +175,18 @@ export default function EP360() {
         <div style={{width:34,height:34,borderRadius:8,background:`linear-gradient(135deg,${GOLD},#f59e0b)`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color:DARK}}>EP</div>
         <div>
           <div style={{fontSize:15,fontWeight:800,letterSpacing:-0.5}}>EP360 Scenario Planner</div>
-          <div style={{fontSize:10,color:MUTED}}>Actual FY 2025-26 P&L Data • Interactive Scenarios</div>
+          <div style={{fontSize:10,color:MUTED}}>Forward plan {calc.planLabel} • Mar 2026 MRR baseline</div>
         </div>
       </div>
-      <div style={{display:"flex",gap:12,alignItems:"center",fontSize:11,color:MUTED}}>
+      <div style={{display:"flex",gap:12,alignItems:"center",fontSize:11,color:MUTED,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:4}}>
+          {Object.entries(PLAN_HORIZONS).map(([k,h])=>
+            <button key={k} onClick={()=>setPlanHorizon(k)} style={{padding:"4px 10px",borderRadius:6,border:`1px solid ${planHorizon===k?GOLD:BORDER}`,background:planHorizon===k?GOLD+"22":CARD,color:planHorizon===k?GOLD:"#fff",cursor:"pointer",fontSize:10,fontWeight:600}}>{h.short}</button>
+          )}
+        </div>
         <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}><Toggle on={inclFixed} onChange={()=>setInclFixed(v=>!v)} size="sm"/>Ops/Tools/Ads ₹3.22L/mo</label>
-        <div style={{background:RED+"22",color:RED,padding:"4px 10px",borderRadius:6,fontWeight:700,fontSize:11}}>FY Loss: ₹31.52L</div>
+        <div style={{background:GREEN+"22",color:GREEN,padding:"4px 10px",borderRadius:6,fontWeight:700,fontSize:11}}>Chandramohan exited — saves ₹10.75L/yr</div>
+        <div style={{background:RED+"22",color:RED,padding:"4px 10px",borderRadius:6,fontWeight:700,fontSize:11}}>FY 25-26 loss: ₹31.52L</div>
       </div>
     </div>
 
@@ -199,7 +211,7 @@ export default function EP360() {
         <KPI label="Monthly Revenue" value={INR(calc.adjMRR)} sub={calc.seoRisk>0?`⚠️ ${INR(calc.seoRisk)} SEO at risk`:`${calc.aC.length} clients + ${newClients} new`} trend={calc.profit>0?"up":"down"} large/>
         <KPI label="Monthly Cost" value={INR(calc.cost)} sub={`Team ${INR(calc.totalSal)} + Fixed ${INR(FIXED)}`}/>
         <KPI label="Monthly P&L" value={INR(calc.profit)} sub={`Margin: ${PCT(calc.margin)}`} trend={calc.profit>0?"up":"down"} large/>
-        <KPI label="Annual P&L" value={INR(calc.profit*12)} sub={`${calc.hc} people • Saved ${INR(calc.savings)} vs current`} trend={calc.profit>0?"up":"down"}/>
+        <KPI label={`${calc.planShort} P&L`} value={INR(calc.periodProfit)} sub={`${calc.planLabel} • ${calc.hc} people • Saved ${INR(calc.savings)} vs baseline/yr`} trend={calc.periodProfit>0?"up":"down"}/>
       </div>
 
       {calc.seoRisk>0 && <div style={{background:RED+"15",border:`1px solid ${RED}44`,borderRadius:10,padding:"10px 16px",marginBottom:14,display:"flex",alignItems:"center",gap:10,fontSize:12}}>
@@ -379,7 +391,7 @@ export default function EP360() {
       {/* PROJECTION */}
       {tab==="projection" && <div>
         <div style={{background:CARD,borderRadius:12,border:`1px solid ${BORDER}`,padding:18,marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:14,color:GOLD}}>12-Month Projection</div>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:14,color:GOLD}}>Forward Plan — {calc.planLabel}</div>
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={calc.months}>
               <defs>
@@ -407,7 +419,7 @@ export default function EP360() {
               <td style={{padding:"5px 10px",textAlign:"right",color:m.cum>=0?GREEN:RED,fontWeight:700,fontFamily:"'JetBrains Mono',monospace"}}>{INR(m.cum)}</td>
             </tr>)}</tbody>
             <tfoot><tr style={{borderTop:`2px solid ${GOLD}44`}}>
-              <td style={{padding:"8px 10px",fontWeight:800,color:GOLD}}>12-Month Total</td>
+              <td style={{padding:"8px 10px",fontWeight:800,color:GOLD}}>{calc.planShort} Total</td>
               <td style={{padding:"8px 10px",textAlign:"right",fontWeight:800,color:GREEN,fontFamily:"'JetBrains Mono',monospace"}}>{INR(calc.months.reduce((s,m)=>s+m.revenue,0))}</td>
               <td style={{padding:"8px 10px",textAlign:"right",fontWeight:800,color:RED,fontFamily:"'JetBrains Mono',monospace"}}>{INR(calc.months.reduce((s,m)=>s+m.cost,0))}</td>
               <td colSpan={2} style={{padding:"8px 10px",textAlign:"right",fontWeight:800,fontSize:14,color:calc.months.reduce((s,m)=>s+m.profit,0)>=0?GREEN:RED,fontFamily:"'JetBrains Mono',monospace"}}>{INR(calc.months.reduce((s,m)=>s+m.profit,0))}</td>
@@ -434,8 +446,8 @@ export default function EP360() {
               {d:"Thoufik Monthly",a:"₹50,000",s:"H2 Note 2: March = ₹50,000",m:true,n:"Joined Feb 2026. Salary file: ₹6L/yr"},
               {d:"Lakshmee Monthly",a:"₹41,667",s:"H2 Note 2: March = ₹41,667",m:true,n:"100% sales outreach"},
               {d:"Thangavel Monthly",a:"₹43,083",s:"H2 Note 2: March = ₹43,083",m:true,n:"Matches"},
-              {d:"Chandramohan Monthly",a:"₹89,583",s:"H2 Note 2: March = ₹89,583",m:true,n:"Rated Bad"},
-              {d:"H2 Total Salary",a:"₹53.26L",s:"H2 P&L: ₹53.26L",m:true,n:"96% increase vs H1"},
+              {d:"Chandramohan (exited)",a:"—",s:"Left May 2026. Was ₹89,583/mo",m:true,n:"Removed from team & scenarios"},
+              {d:"H2 Total Salary",a:"₹53.26L",s:"H2 P&L: ₹53.26L",m:true,n:"96% increase vs H1; Jun+ plan excludes Chandramohan"},
               {d:"H1 Tools",a:"₹5.50L",s:"H1 Note 3: ₹5.50L",m:true,n:"Includes ROAS ₹2.83L"},
               {d:"H2 Tools",a:"₹3.98L",s:"H2 Note 3: ₹3.98L",m:true,n:"ClickUp, Clay, Dripify etc."},
               {d:"H2 Ads",a:"₹2.75L",s:"H2 Note 4: ₹2.75L",m:true,n:"Google ₹1.6L + LinkedIn ₹0.4L + Upwork ₹0.75L"},
@@ -451,11 +463,11 @@ export default function EP360() {
           </table>
         </div>
         <div style={{background:GREEN+"15",border:`1px solid ${GREEN}44`,borderRadius:10,padding:"12px 16px",fontSize:12,color:GREEN}}>
-          <strong>All 17 data points verified ✓</strong> — Every number traces back to your uploaded P&L files and matches March 2026 actuals.
+          <strong>All 17 data points verified ✓</strong> — Historical FY 25-26 from uploaded P&L; forward scenarios use Jun 2026+ with Chandramohan removed.
         </div>
       </div>}
     </div>
 
-    <div style={{textAlign:"center",padding:"20px",fontSize:10,color:MUTED,borderTop:`1px solid ${BORDER}`}}>EP360 Scenario Planner • Built from actual FY 2025-26 P&L data • Engage Positive 360</div>
+    <div style={{textAlign:"center",padding:"20px",fontSize:10,color:MUTED,borderTop:`1px solid ${BORDER}`}}>EP360 Scenario Planner • Forward plan Jun 2026 – Dec 2026 / Mar 2027 • Engage Positive 360</div>
   </div>;
 }
